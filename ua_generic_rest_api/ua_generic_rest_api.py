@@ -138,8 +138,8 @@ class GenericRestApi(abc.ABC):
                 The string to post to the specific endpoint.
 
         Returns:
-            (string):
-                The returned endpoint information as an xml-parsable string.
+            response (requests.models.response):
+                Holds, among other things, the returned request information.
         """
         if self.host not in endpoint:
             url_endpoint = self.host + str(endpoint)
@@ -149,7 +149,15 @@ class GenericRestApi(abc.ABC):
         return response
 
     def delete(self, endpoint):
-        """Delete the given endpoint, returning the response."""
+        """Delete the given endpoint, returning the response.
+
+        Arguments:
+            endpoint (string):
+                The REST endpoint which you want deleted.
+
+        Returns:
+            response (requests.models.response):
+                Holds, among other things, the returned request information."""
         if self.host not in endpoint:
             endpoint = self.host + str(endpoint)
         response = self.session.delete(endpoint)
@@ -193,14 +201,7 @@ def _brute_batch_get(session, urls):
 
 
 async def _get_async(session, urls):
-    """Uses ThreadPoolExecutor to GET the list of uris.
-
-    Arguments:
-        uris (list):
-            A list of completed uris to make using requests.
-    Return:
-        A list containing the HTTP responses as dictionaries.
-    """
+    """Uses ThreadPoolExecutor to GET the list of uris."""
     def single_get(url):
         response = session.get(url)
         response.raise_for_status()
