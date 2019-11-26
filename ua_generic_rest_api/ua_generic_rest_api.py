@@ -1,20 +1,17 @@
 #!/usr/bin/env python
 """An abstract class that holds get, put, post, delete for any REST api."""
-import re
 import requests
 import concurrent.futures
 import asyncio
-from bs4 import BeautifulSoup
 import abc
 
 
 class GenericRestApi(abc.ABC):
     """The object that holds the stache environment variables."""
     @abc.abstractmethod
-    def __init__(self, host, header_info, page_query, page_tag="next-page"):
+    def __init__(self, host, header_info, page_query):
         self.host = host
         self.header_info = header_info
-        self.page_tag = page_tag
         self.page_query = page_query
         self.session = self._setup_session()
 
@@ -27,7 +24,7 @@ class GenericRestApi(abc.ABC):
 
         return session
 
-    def get(self, endpoints, parameters=None, get_all=True, total_pages=None):
+    def get(self, endpoints, parameters=None, total_pages=None):
         """Get the xml(s) of the url_endpoint(s) passed in.
 
         Arguments:
@@ -37,10 +34,6 @@ class GenericRestApi(abc.ABC):
             parameters (dict):
                 A mapping of a query-able name: value. NOTE: queries can only
                 be added to a single endpoint.
-            get_all (bool):
-                If there are next-page tags on that resource, whether get
-                should return all of the resources on all pages or just the
-                first page.
             total_pages (int):
                 If a get is given a total_pages keyword, then get will perform
                 a multi-threaded get on all of the pages.
@@ -61,35 +54,19 @@ class GenericRestApi(abc.ABC):
                 endpoints[i] = f"{self.host}{endpoint}"
 
         # Build endpoint with query if a parameters dict is given.
-        if parameters and (total_pages is None or get_all is False):
+        if parameters and total_pages is None:
             query = _query_builder(parameters)
             endpoints[0] += query
 
         responses = list()
-        response = self.session.get(endpoints[0], timeout=10)
-        response.raise_for_status()
-
-        next_page_tag = None
-        # Find the next page tag if it exists and the request is an xml and
-        # there is a page_tag.
-        if (
-            self.session.headers["Content-Type"] == "application/xml"
-                and get_all and self.page_tag):
-            response_soup = BeautifulSoup(response.text, "xml")
-            next_page_tag = response_soup.find(self.page_tag)
 
         # Multithread get dissimilar endpoints.
         if len(endpoints) > 1:
             responses = _brute_batch_get(self.session, endpoints)
 
-        # Harvest all of the pages of the resource if total pages are unknown.
-        elif get_all and next_page_tag and total_pages is None:
-            responses = self._harvest_all_resource(
-                self.session, endpoints[0], list())
-
         # Multithread all pages of resource given the page query and total page
         # number.
-        elif get_all and total_pages:
+        elif total_pages:
             paged_endpoints = list()
             for i in range(1, total_pages + 1):
                 if parameters:
@@ -142,8 +119,8 @@ class GenericRestApi(abc.ABC):
                 Holds, among other things, the returned request information.
         """
         if self.host not in endpoint:
-            url_endpoint = self.host + str(endpoint)
-        response = self.session.post(url_endpoint, str(payload))
+            endpoint = self.host + str(endpoint)
+        response = self.session.post(endpoint, str(payload))
         response.raise_for_status()
 
         return response
@@ -164,28 +141,6 @@ class GenericRestApi(abc.ABC):
         response.raise_for_status()
 
         return response
-
-    def _harvest_all_resource(self, session, next_page_uri, contents):
-        """Recursively harvests gets of all pages from the given session."""
-        if next_page_uri:
-            response = session.get(next_page_uri, timeout=10)
-            response.raise_for_status()
-
-            response_soup = BeautifulSoup(response.text, "xml")
-            contents.append(response_soup)
-            next_page_tag = response_soup.find(self.page_tag)
-
-            if next_page_tag:
-                next_page_uri = re.sub(r"\?.*", "", next_page_uri)
-                next_page_uri += _query_builder(
-                    {self.page_query: str(next_page_tag.text)})
-            else:
-                next_page_uri = None
-
-            return self._harvest_all_resource(session, next_page_uri, contents)
-
-        else:
-            return contents
 
 
 def _brute_batch_get(session, urls):
