@@ -183,16 +183,18 @@ def _query_builder(parameters):
     """Converts dictionary with queries to http-able query."""
     queries = dict()
     for key in parameters:
-        queries.setdefault(key, list())
-        if isinstance(parameters[key], list):
-            queries[key].extend(parameters[key])
+        queries.setdefault(key, set())
+        if type(parameters[key]) in [list, set]:
+            queries[key].union(set(parameters[key]))
         else:
-            queries[key].append(parameters[key])
+            queries[key].add(parameters[key])
 
     final_query = ""
     for key, group in queries.items():
         for value in group:
-            final_query += f"&{key}={value}"
+            single_query = f"&{key}={value}"
+            if single_query not in final_query:
+                final_query += single_query
 
     final_query = final_query.lstrip('&')
     return f"?{final_query}"
