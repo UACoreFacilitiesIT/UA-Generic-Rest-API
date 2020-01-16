@@ -38,6 +38,16 @@ class TestGenericRestApi(unittest.TestCase):
         assert int(json_response["meta"]["page"]) == 2
         assert len(json_response["results"]) == 1
 
+    def test_get_multiple_queries_with_multiple_values(self):
+        query_response = self.json_api.get(
+            "https://api.openaq.org/v1/cities",
+            {"country": ["BR", "CA"], "limit": "10000"})
+
+        json_response = json.loads(query_response[0].text)
+        assert int(json_response["meta"]["limit"]) == 10000
+        for entry in json_response["results"]:
+            assert entry["country"] in ["BR", "CA"]
+
     def test_batch_get_with_multiple_queries(self):
         endpoints = ["https://api.openaq.org/v1/cities"]
         query_response = self.json_api.get(

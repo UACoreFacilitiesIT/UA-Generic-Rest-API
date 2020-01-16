@@ -185,7 +185,7 @@ def _query_builder(parameters):
     for key in parameters:
         queries.setdefault(key, set())
         if type(parameters[key]) in [list, set]:
-            queries[key].union(set(parameters[key]))
+            queries[key] = queries[key].union(set(parameters[key]))
         else:
             queries[key].add(parameters[key])
 
