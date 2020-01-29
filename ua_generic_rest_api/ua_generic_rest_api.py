@@ -185,12 +185,14 @@ def _query_builder(parameters):
     for key in parameters:
         queries.setdefault(key, set())
         if type(parameters[key]) in [list, set]:
+            # Union is Set.extend() in this context.
             queries[key] = queries[key].union(set(parameters[key]))
         else:
             queries[key].add(parameters[key])
 
     final_query = ""
     for key, group in queries.items():
+        group = sorted(list(group))
         for value in group:
             single_query = f"&{key}={value}"
             if single_query not in final_query:

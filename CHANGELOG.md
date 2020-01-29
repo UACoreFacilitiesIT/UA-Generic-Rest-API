@@ -3,6 +3,10 @@
 All notable changes to this project can be found here.
 The format of this changelog is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+#### 2020/01/29[2.0.3](https://github.com/UACoreFacilitiesIT/UA-Generic-Rest-API/)
+
+Bug fix that stopped queries which are substrings of queries from being added. Now, queries are added in sorted order, guaranteeing that substring queries are added before other ones.
+
 #### 2020/01/16[2.0.2](https://github.com/UACoreFacilitiesIT/UA-Generic-Rest-API/)
 
 Bug fix with querying multiple values under the same tag. Previously queries for that tag would be empty and now they actually contain all of the requested values.
