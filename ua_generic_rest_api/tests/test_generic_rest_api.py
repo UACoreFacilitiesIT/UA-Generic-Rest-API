@@ -1,8 +1,9 @@
 import math
 import json
+import string
 import unittest
+import requests
 from nose.tools import raises
-from requests import exceptions
 from ua_generic_rest_api import ua_generic_rest_api
 
 
@@ -118,9 +119,34 @@ class TestGenericRestApi(unittest.TestCase):
         xml_response = xml_api.get(xml_url)
         assert xml_response[0].status_code == 200
 
-    @raises(exceptions.HTTPError)
+    @raises(requests.exceptions.HTTPError)
     def test_get_fail(self):
         self.json_api.get("get fail!")
+
+    def test_get_url_too_long(self):
+        countries = list()
+        for letter_one in string.ascii_uppercase:
+            for letter_two in string.ascii_uppercase:
+                for letter_three in string.ascii_uppercase:
+                    countries.append(letter_one + letter_two)
+                    countries.append(letter_one + letter_two + letter_three)
+
+        # Make sure that we get a 414 error with this endpoint.
+        parameters = {"country": countries[:10000]}
+        get_endpoint = "https://api.openaq.org/v1/cities"
+        get_endpoint += ua_generic_rest_api._query_builder(parameters)
+        try:
+            requests.get(get_endpoint)
+        except requests.exceptions.HTTPError as error:
+            assert error.status == 414
+
+        responses = self.json_api.get(
+            "https://api.openaq.org/v1/cities", parameters=parameters)
+
+        for response in responses:
+            # Some of these gets are not well-formed, but it doesn't return a
+            # 414 error.
+            assert response.status_code in [200, 400]
 
     def test_put_endpoint_with_and_without_host(self):
         # NOTE: To test the put function, write a test for your api that

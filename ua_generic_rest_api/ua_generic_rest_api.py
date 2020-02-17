@@ -57,6 +57,7 @@ class GenericRestApi(abc.ABC):
         if parameters and total_pages is None:
             query = _query_builder(parameters)
             endpoints[0] += query
+            endpoints = _http_414_scrubber(endpoints)
 
         responses = list()
 
@@ -79,7 +80,7 @@ class GenericRestApi(abc.ABC):
             responses = _brute_batch_get(self.session, paged_endpoints)
 
         else:
-            response = self.session.get(endpoints[0], timeout=10)
+            response = self.session.get(endpoints[0], timeout=60)
             response.raise_for_status()
             responses.append(response)
 
@@ -200,3 +201,30 @@ def _query_builder(parameters):
 
     final_query = final_query.lstrip('&')
     return f"?{final_query}"
+
+
+def _http_414_scrubber(endpoints):
+    """Splits long queried urls into many shorter urls."""
+    queried_url = endpoints[0]
+    base_url = endpoints[0].split('?')[0]
+    new_endpoints = list()
+    while len(queried_url) > 2000:
+        # Find the last '&' before the 2000th character.
+        index = queried_url.rfind('&', 0, 2000)
+        sub_url = queried_url[0:index]
+        new_endpoints.append(sub_url)
+        queried_url = f"{base_url}?{queried_url[index + 1:]}"
+
+    if new_endpoints:
+        new_endpoints.append(queried_url)
+        with open("./get.txt", 'w') as file:
+            file.write("\n".join(new_endpoints))
+        # Extend with the previous list, so any other urls after the first are
+        # still gotten.
+        new_endpoints.extend(endpoints[1:])
+        # Reset the reference.
+        endpoints = new_endpoints
+
+        return new_endpoints
+
+    return endpoints
