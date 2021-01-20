@@ -3,6 +3,12 @@
 All notable changes to this project can be found here.
 The format of this changelog is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+#### 2020/1/20 [2.0.5](https://github.com/UACoreFacilitiesIT/UA-Generic-Rest-API/)
+
+Updated setup.py dependencies to be more explicit and contain every dependency.
+
+- Previously some dependencies were not listed, but were assumed to be installed through other packages.
+
 #### 2020/02/17[2.0.4](https://github.com/UACoreFacilitiesIT/UA-Generic-Rest-API/)
 
 Fixed issue where query builder might create a url of more than 2000 characters when building a query. It not will split the url into multiple pieces each of less than 2000 characters, and attempt to batch get them.
