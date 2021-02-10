@@ -127,9 +127,9 @@ class TestGenericRestApi(unittest.TestCase):
         countries = list()
         for letter_one in string.ascii_uppercase:
             for letter_two in string.ascii_uppercase:
-                for letter_three in string.ascii_uppercase:
-                    countries.append(letter_one + letter_two)
-                    countries.append(letter_one + letter_two + letter_three)
+                # for letter_three in string.ascii_uppercase:
+                countries.append(letter_one + letter_two)
+                    # countries.append(letter_one + letter_two + letter_three)
 
         # Make sure that we get a 414 error with this endpoint.
         parameters = {"country": countries[:10000]}
