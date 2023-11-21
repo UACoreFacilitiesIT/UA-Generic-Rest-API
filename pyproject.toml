@@ -1,15 +1,14 @@
 [tool.poetry]
-name = "ua_generic_rest_api"
+name = "ua-generic-rest-api"
 version = "2.0.5"
-description = ""
-authors = [""]
+description = "Provides basic REST API Implementation for GET, PUT, and POST, and DELETE."
+authors = ["Your Name <you@example.com>"]
 readme = "README.md"
+packages = [{include = "ua_generic_rest_api"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
 requests = "^2.31.0"
-bs4 = "^0.0.1"
-lxml = "^4.9.3"
 
 
 [build-system]
